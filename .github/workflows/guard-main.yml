@@ -1,0 +1,24 @@
+name: 'Verify PR branch target'
+on:
+  pull_request_target:
+    types:
+      - 'opened'
+    branches:
+      - 'main'
+jobs:
+  warn:
+    if: github.head_ref != 'development'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/github-script@v6'
+        with:
+          script: |
+            try {
+              const {owner,repo} = context.repo;
+              await github.rest.issues.createComment({
+                issue_number: ${{github.event.pull_request.number}},
+                body: "⚠️⚠️ This pull request targets `main`. Please re-target it to `development`. ⚠️⚠️",
+                owner, repo});
+            } catch (err) {
+              core.setFailed(err);
+            }
